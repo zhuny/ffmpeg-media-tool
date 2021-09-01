@@ -1,11 +1,13 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Union, List, Dict
+from pathlib import Path
+from typing import Union, List, Dict, Optional
 
 
 @dataclass
 class InputMedia:
-    pass
+    index: int
+    file_path: Path
 
 
 class KindEnum(Enum):
@@ -20,9 +22,10 @@ class SourceOf:
 
 class Filters:
     name: str
-    kwargs: Dict[str, str]
+    args: Optional[str]
+    kwargs: Dict[str, str] = field(default_factory=dict)
 
 
 class Media:
-    source: List[Union['Media', SourceOf]]
+    source_list: List[Union['Media', SourceOf]]
     filters: List[Filters]
