@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
 from typing import List
@@ -6,7 +6,7 @@ from typing import List
 
 @dataclass
 class InputSource:
-    filename: Path
+    file_path: Path
     key: str = ""
 
 
@@ -20,6 +20,6 @@ class MediaBlock:
 
 @dataclass
 class OutputSource:
-    filename: Path
-    key: str
-    media_block_list: List[MediaBlock]
+    file_path: Path
+    key: str = ""
+    media_block_list: List[MediaBlock] = field(default_factory=list)
