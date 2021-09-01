@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from decimal import Decimal
+from pathlib import Path
 from typing import List
 
 
 @dataclass
 class InputSource:
-    filename: str
+    filename: Path
     key: str = ""
 
 
@@ -19,6 +20,6 @@ class MediaBlock:
 
 @dataclass
 class OutputSource:
-    filename: str
+    filename: Path
     key: str
     media_block_list: List[MediaBlock]
