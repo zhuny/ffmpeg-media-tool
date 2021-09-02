@@ -1,3 +1,4 @@
+import subprocess
 from decimal import Decimal
 from pathlib import Path
 
@@ -65,7 +66,6 @@ class MediaController:
         output_source.media_block_list.append(block)
 
     def convert(self):
-
         for output in self.output_source.values():
             pipeline = [
                 FilterBuilderVisitor(),
@@ -75,3 +75,5 @@ class MediaController:
                 step.visit(output)
                 output = step.end()
                 print(output)
+
+        subprocess.run(output)

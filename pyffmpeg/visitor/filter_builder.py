@@ -31,7 +31,8 @@ class FilterBuilderVisitor:
                     }
                 )
             ],
-            count=2
+            count=2,
+            output_path=output.file_path
         )
 
     def visit_media_block(self, block):

@@ -33,3 +33,4 @@ class Media:
     source_list: List[Union['Media', SourceOf]]
     filters: List[Filters]
     count: int = 1
+    output_path: Path = None

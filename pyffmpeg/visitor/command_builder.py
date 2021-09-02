@@ -15,8 +15,9 @@ class CommandBuilderVisitor:
         self.index = 1
         self.char = "z"
         self.stream = []
-        self.input_file = LazyCreatedList()
+        self.input_files = LazyCreatedList()
         self.last_key = None
+        self.output_file = None
 
     def _get_key(self):
         key = f"[{self.char}{self.index}]"
@@ -49,6 +50,7 @@ class CommandBuilderVisitor:
         ]
         self.stream.extend(key_list)
         self.last_key = key_list
+        self.output_file = media.output_path
         return "".join(key_list)
 
     def _concat_filter(self, f: Filters):
@@ -63,13 +65,13 @@ class CommandBuilderVisitor:
                 self.stream.pop()
 
     def visit_source_of(self, source_of: SourceOf):
-        self.input_file[source_of.source.index] = source_of.source.file_path
+        self.input_files[source_of.source.index] = source_of.source.file_path
         char = source_of.kind.name[0]
         return f"[{source_of.source.index}:{char}]"
 
     def _build_command(self):
         yield "ffmpeg"
-        for input_file in self.input_file:
+        for input_file in self.input_files:
             yield "-i"
             yield str(input_file)
 
@@ -82,6 +84,7 @@ class CommandBuilderVisitor:
 
         yield '-b:v'
         yield '6715k'
+        yield str(self.output_file)
 
     def end(self):
         return list(self._build_command())
