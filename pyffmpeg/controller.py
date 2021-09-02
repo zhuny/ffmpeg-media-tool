@@ -1,7 +1,7 @@
 from decimal import Decimal
 from pathlib import Path
 
-from ffmpeg.model.media_block import InputSource, OutputSource, MediaBlock
+from pyffmpeg.model.media_block import InputSource, OutputSource, MediaBlock
 
 
 class RandomKeyDict(dict):
