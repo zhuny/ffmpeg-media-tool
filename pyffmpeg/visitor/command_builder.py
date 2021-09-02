@@ -3,11 +3,19 @@ from typing import Union
 from pyffmpeg.model.filter_complex import Media, SourceOf, Filters
 
 
+class LazyCreatedList(list):
+    def __setitem__(self, key, value):
+        while len(self) <= key:
+            self.append(None)
+        super().__setitem__(key, value)
+
+
 class CommandBuilderVisitor:
     def __init__(self):
         self.index = 1
         self.char = "z"
         self.stream = []
+        self.input_file = LazyCreatedList()
 
     def _get_key(self):
         key = f"[{self.char}{self.index}]"
@@ -21,9 +29,6 @@ class CommandBuilderVisitor:
             return self.visit_source_of(media)
         else:
             pass
-
-    def end(self):
-        return "".join(self.stream)
 
     def visit_media(self, media: Media) -> str:
         key_list = []
@@ -54,5 +59,21 @@ class CommandBuilderVisitor:
                 self.stream.pop()
 
     def visit_source_of(self, source_of: SourceOf):
+        self.input_file[source_of.source.index] = source_of.source.file_path
         char = source_of.kind.name[0]
         return f"[{source_of.source.index}:{char}]"
+
+    def _build_command(self):
+        yield "ffmpeg"
+        for input_file in self.input_file:
+            yield "-i"
+            yield str(input_file)
+
+        yield "-filter_complex"
+        yield "".join(self.stream)
+
+        yield '-b:v'
+        yield '6715k'
+
+    def end(self):
+        return list(self._build_command())
