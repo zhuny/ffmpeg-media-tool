@@ -15,17 +15,20 @@ class KindEnum(Enum):
     audio = "AUDIO"
 
 
+@dataclass
 class SourceOf:
     source: InputMedia
     kind: KindEnum
 
 
+@dataclass
 class Filters:
     name: str
-    args: Optional[str]
+    args: Optional[str] = None
     kwargs: Dict[str, str] = field(default_factory=dict)
 
 
+@dataclass
 class Media:
     source_list: List[Union['Media', SourceOf]]
     filters: List[Filters]
