@@ -1,16 +1,18 @@
-from decimal import Decimal
-
-from pyffmpeg.model.filter_complex import Media, Filters, SourceOf, InputMedia, \
-    KindEnum
-from pyffmpeg.model.media_block import OutputSource, MediaBlock, InputSource
+from pyffmpeg.model.filter_complex import Media, Filters, SourceOf, \
+    InputMedia, KindEnum
+from pyffmpeg.model.media_block import OutputSource, InputSource
 
 
 class FilterBuilderVisitor:
     def __init__(self):
         self.key_count = {}
+        self.result = None
 
     def visit(self, output):
-        return self.visit_output_source(output)
+        self.result = self.visit_output_source(output)
+
+    def end(self):
+        return self.result
 
     def visit_output_source(self, output: OutputSource):
         source_list = []
@@ -35,12 +37,15 @@ class FilterBuilderVisitor:
         input_media = self.visit_input_source(block.input_source)
         yield Media(
             source_list=[
-                SourceOf(
-                    source=input_media,
-                    kind=KindEnum.video
-                )
+                SourceOf(source=input_media, kind=KindEnum.video)
             ],
             filters=list(self._trim_with_speed(block, KindEnum.video))
+        )
+        yield Media(
+            source_list=[
+                SourceOf(source=input_media, kind=KindEnum.audio)
+            ],
+            filters=list(self._trim_with_speed(block, KindEnum.audio))
         )
 
     def _trim_with_speed(self, block, kind_enum: KindEnum):

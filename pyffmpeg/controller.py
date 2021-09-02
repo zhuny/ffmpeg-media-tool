@@ -2,6 +2,8 @@ from decimal import Decimal
 from pathlib import Path
 
 from pyffmpeg.model.media_block import InputSource, OutputSource, MediaBlock
+from pyffmpeg.visitor.command_builder import CommandBuilderVisitor
+from pyffmpeg.visitor.filter_builder import FilterBuilderVisitor
 
 
 class RandomKeyDict(dict):
@@ -63,4 +65,13 @@ class MediaController:
         output_source.media_block_list.append(block)
 
     def convert(self):
-        pass
+
+        for output in self.output_source.values():
+            pipeline = [
+                FilterBuilderVisitor(),
+                CommandBuilderVisitor()
+            ]
+            for step in pipeline:
+                step.visit(output)
+                output = step.end()
+                print(output)

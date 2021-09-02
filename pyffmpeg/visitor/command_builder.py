@@ -22,11 +22,15 @@ class CommandBuilderVisitor:
         else:
             pass
 
+    def end(self):
+        return "".join(self.stream)
+
     def visit_media(self, media: Media) -> str:
         key_list = []
         for submedia in media.source_list:
             key_list.append(self.visit(submedia))
-            self.stream.append(";")
+            if isinstance(submedia, Media):
+                self.stream.append(";")
 
         self.stream.append("".join(key_list))
         for i, fi in enumerate(media.filters):
