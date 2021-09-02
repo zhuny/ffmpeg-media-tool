@@ -54,7 +54,7 @@ class TimeContainer:
                 return g
 
     def set_time(self, tick_code, time_info, file_path):
-        g = self.pattern.fullmatch(tick_code)
+        g = self._find_tick(tick_code)
         if g is None:
             return
 
@@ -77,6 +77,23 @@ class TimeContainer:
                     level.check_point
                 )
 
+    def add_output(self, output_name, level_code_list):
+        print(output_name, level_code_list)
+        out_key = self.controller.add_output_source(output_name)
+
+        pattern = re.compile(r"([a-z]+)(\d+)")
+        for level_code in level_code_list:
+            if g := pattern.fullmatch(level_code):
+                team, counter = g.groups()
+                counter = int(counter)
+                print(level_code)
+                for block in self.map_info[team][counter].check_point:
+                    in_key = self.controller.add_input_source(block.file_path)
+                    self.controller.add_output_block(
+                        in_key, out_key,
+                        block.start_point, block.end_point
+                    )
+
 
 def group_n(iterable, n, m):
     before = []
@@ -94,25 +111,36 @@ def group_n(iterable, n, m):
             is_skip = not is_skip
 
 
-def show_group(input_folder: Path):
+def show_group(input_folder: Path, output_folder: Path):
     line_match = re.compile(r'\d+=(.+)')
     time_group = TimeContainer()
+
+    suffix_map = {
+        f.stem: f
+        for f in input_folder.glob('*')
+        if f.suffix != '.gbm'
+    }
+
     for f in input_folder.glob('*.gbm'):
+        if f.stem not in suffix_map:
+            continue
+
+        matched_ts = suffix_map[f.stem]
         for line in f.open():
             g = line_match.match(line)
             if g is not None:
                 info = g.group(1).split()
-                time_group.set_time(info[1], Decimal(info[0]), f)
+                time_group.set_time(info[1], Decimal(info[0]), matched_ts)
 
     time_group.show()
 
     with (input_folder / 'output.txt').open() as f:
         for output, levels in group_n(f, 2, 1):
-            print(output, levels)
+            time_group.add_output(output_folder / output, levels.split(','))
 
 
 def main():
-    show_group(Path(sys.argv[1]))
+    show_group(Path(sys.argv[1]), Path(sys.argv[2]))
 
 
 if __name__ == '__main__':
