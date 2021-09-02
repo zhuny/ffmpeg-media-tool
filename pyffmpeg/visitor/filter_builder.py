@@ -63,7 +63,9 @@ class FilterBuilderVisitor:
             args="PTS-STARTPTS"
         )
         inv = 1 / block.speed
-        if kind_enum == KindEnum.video:
+        if block.speed == 1:
+            pass
+        elif kind_enum == KindEnum.video:
             yield Filters("setpts", args=f"PTS*{inv}")
             yield Filters(
                 "minterpolate",
@@ -74,7 +76,7 @@ class FilterBuilderVisitor:
                 }
             )
         elif kind_enum == KindEnum.audio:
-            yield Filters("atempo", args=f"{inv}")
+            yield Filters("atempo", args=f"{block.speed}")
 
     def _filter_name(self, name, kind_enum: KindEnum):
         if kind_enum == KindEnum.video:
