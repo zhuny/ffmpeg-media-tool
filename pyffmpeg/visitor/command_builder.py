@@ -16,6 +16,7 @@ class CommandBuilderVisitor:
         self.char = "z"
         self.stream = []
         self.input_file = LazyCreatedList()
+        self.last_key = None
 
     def _get_key(self):
         key = f"[{self.char}{self.index}]"
@@ -43,9 +44,12 @@ class CommandBuilderVisitor:
             self.stream.append(",")
         if media.filters:
             self.stream.pop()
-        key = self._get_key()
-        self.stream.append(key)
-        return key
+        key_list = [
+            self._get_key() for i in range(media.count)
+        ]
+        self.stream.extend(key_list)
+        self.last_key = key_list
+        return "".join(key_list)
 
     def _concat_filter(self, f: Filters):
         self.stream.append(f"{f.name}=")
@@ -71,6 +75,10 @@ class CommandBuilderVisitor:
 
         yield "-filter_complex"
         yield "".join(self.stream)
+
+        for result in self.last_key:
+            yield "-map"
+            yield result
 
         yield '-b:v'
         yield '6715k'

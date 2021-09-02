@@ -30,7 +30,8 @@ class FilterBuilderVisitor:
                         "a": "1"
                     }
                 )
-            ]
+            ],
+            count=2
         )
 
     def visit_media_block(self, block):
