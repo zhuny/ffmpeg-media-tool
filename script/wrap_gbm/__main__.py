@@ -14,9 +14,38 @@ class Interval:
     start_point: Decimal = None
     end_point: Decimal = None
     file_path: Path = None
+    speed: Decimal = Decimal(1)
 
     def __repr__(self):
-        return f"{self.start_point}-{self.end_point}"
+        return f"{self.start_point}-{self.end_point}(X{self.speed})"
+
+    def contains(self, speed_change):
+        return (
+            self.file_path == speed_change.file_path and
+            self.start_point <= speed_change.changed_at < self.end_point
+        )
+
+    def split(self, speed_change: 'SpeedChange'):
+        if self.start_point == speed_change.changed_at:
+            yield Interval(
+                start_point=self.start_point,
+                end_point=self.end_point,
+                file_path=self.file_path,
+                speed=speed_change.speed
+            )
+        else:
+            yield Interval(
+                start_point=self.start_point,
+                end_point=speed_change.changed_at,
+                file_path=self.file_path,
+                speed=self.speed
+            )
+            yield Interval(
+                start_point=speed_change.changed_at,
+                end_point=self.end_point,
+                file_path=self.file_path,
+                speed=speed_change.speed
+            )
 
 
 @dataclass
@@ -36,6 +65,24 @@ class OneLevel:
             interval.end_point = time_info
         interval.file_path = file_path
 
+    def _split_interval(self, speed_change):
+        for interval in self.check_point:
+            if interval.contains(speed_change):
+                yield from interval.split(speed_change)
+            else:
+                yield interval
+
+    def set_speed(self, speed_change_list: List['SpeedChange']):
+        for speed_change in speed_change_list:
+            self.check_point = list(self._split_interval(speed_change))
+
+
+@dataclass
+class SpeedChange:
+    changed_at: Decimal
+    speed: Decimal
+    file_path: Path
+
 
 class TeamInfo(collections.defaultdict):
     def __init__(self):
@@ -44,29 +91,36 @@ class TeamInfo(collections.defaultdict):
 
 class TimeContainer:
     def __init__(self):
-        self.pattern = re.compile(r"([a-z]+)(\d+)cp(\d)([ab])")
+        self.pattern_interval = re.compile(r"([a-zA-Z]+)(\d+)cp(\d)([ab])")
+        self.pattern_speed = re.compile(r"x(\d)")
         self.map_info = collections.defaultdict(TeamInfo)
         self.controller = MediaController()
+        self.speed_info = []
 
     def _find_tick(self, tick_code):
         for tick_com in tick_code.split('|'):
-            if g := self.pattern.fullmatch(tick_com):
+            if g := self.pattern_interval.fullmatch(tick_com):
                 return g
+            else:
+                print(__file__, tick_com)
 
     def set_time(self, tick_code, time_info, file_path):
-        g = self._find_tick(tick_code)
-        if g is None:
-            return
+        for tick_com in tick_code.split('|'):
+            if g := self.pattern_interval.fullmatch(tick_com):
+                team_name, counter, check_point, opening = g.groups()
+                counter = int(counter)
+                check_point = int(check_point)
 
-        team_name, counter, check_point, opening = g.groups()
-        counter = int(counter)
-        check_point = int(check_point)
-
-        self.map_info[team_name][counter].set_time(
-            check_point,
-            opening, time_info,
-            file_path
-        )
+                self.map_info[team_name][counter].set_time(
+                    check_point,
+                    opening, time_info,
+                    file_path
+                )
+            elif g := self.pattern_speed.fullmatch(tick_com):
+                speed = Decimal(g.group(1))
+                self.speed_info.append(
+                    SpeedChange(time_info, speed, file_path)
+                )
 
     def show(self):
         for name, info in self.map_info.items():
@@ -76,6 +130,11 @@ class TimeContainer:
                     f"    {name}{index} : {len(level.check_point)}",
                     level.check_point
                 )
+
+    def adjust_speed(self):
+        for team, team_level in self.map_info.items():
+            for index, level in team_level.items():
+                level.set_speed(self.speed_info)
 
     def add_output(self, output_name, level_code_list):
         print(output_name, level_code_list)
@@ -132,7 +191,7 @@ def show_group(input_folder: Path, output_folder: Path):
                 info = g.group(1).split()
                 time_group.set_time(info[1], Decimal(info[0]), matched_ts)
 
-    time_group.show()
+    time_group.adjust_speed()
 
     with (input_folder / 'output.txt').open() as f:
         for output, levels in group_n(f, 2, 1):
