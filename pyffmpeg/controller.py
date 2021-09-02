@@ -1,7 +1,10 @@
+import subprocess
 from decimal import Decimal
 from pathlib import Path
 
-from ffmpeg.model.media_block import InputSource, OutputSource, MediaBlock
+from pyffmpeg.model.media_block import InputSource, OutputSource, MediaBlock
+from pyffmpeg.visitor.command_builder import CommandBuilderVisitor
+from pyffmpeg.visitor.filter_builder import FilterBuilderVisitor
 
 
 class RandomKeyDict(dict):
@@ -41,22 +44,36 @@ class MediaController:
         input_source = InputSource(file_path=file_path)
         key = self.input_source.add_value(input_source)
         input_source.key = key
+        return key
 
     def add_output_source(self, file_path: Path):
         output_source = OutputSource(file_path=file_path)
         key = self.output_source.add_value(output_source)
         output_source.key = key
+        return key
 
-    def add_output_block(self, input_key, output_key, start, end, speed):
+    def add_output_block(self, input_key, output_key, start, end, speed=None):
         input_source = self.input_source[input_key]
         output_source = self.output_source[output_key]
+        speed = Decimal(1 if speed is None else speed)
+
         block = MediaBlock(
-            file_key=input_source.key,
+            input_source=input_source,
             start_point=Decimal(start),
             end_point=Decimal(end),
-            speed=Decimal(speed)
+            speed=speed
         )
         output_source.media_block_list.append(block)
 
     def convert(self):
-        pass
+        for output in self.output_source.values():
+            pipeline = [
+                FilterBuilderVisitor(),
+                CommandBuilderVisitor()
+            ]
+            for step in pipeline:
+                step.visit(output)
+                output = step.end()
+                print(output)
+
+        subprocess.run(output)
