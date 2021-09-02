@@ -41,20 +41,24 @@ class MediaController:
         input_source = InputSource(file_path=file_path)
         key = self.input_source.add_value(input_source)
         input_source.key = key
+        return key
 
     def add_output_source(self, file_path: Path):
         output_source = OutputSource(file_path=file_path)
         key = self.output_source.add_value(output_source)
         output_source.key = key
+        return key
 
-    def add_output_block(self, input_key, output_key, start, end, speed):
+    def add_output_block(self, input_key, output_key, start, end, speed=None):
         input_source = self.input_source[input_key]
         output_source = self.output_source[output_key]
+        speed = Decimal(1 if speed is None else speed)
+
         block = MediaBlock(
             file_key=input_source.key,
             start_point=Decimal(start),
             end_point=Decimal(end),
-            speed=Decimal(speed)
+            speed=speed
         )
         output_source.media_block_list.append(block)
 
