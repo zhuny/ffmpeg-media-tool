@@ -12,7 +12,7 @@ class InputSource:
 
 @dataclass
 class MediaBlock:
-    file_key: str
+    input_source: InputSource
     start_point: Decimal
     end_point: Decimal
     speed: Decimal = Decimal(1)

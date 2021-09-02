@@ -55,7 +55,7 @@ class MediaController:
         speed = Decimal(1 if speed is None else speed)
 
         block = MediaBlock(
-            file_key=input_source.key,
+            input_source=input_source,
             start_point=Decimal(start),
             end_point=Decimal(end),
             speed=speed
