@@ -137,7 +137,6 @@ class TimeContainer:
                 level.set_speed(self.speed_info)
 
     def add_output(self, output_name, level_code_list):
-        print(output_name, level_code_list)
         out_key = self.controller.add_output_source(output_name)
 
         pattern = re.compile(r"([a-z]+)(\d+)")
@@ -150,8 +149,11 @@ class TimeContainer:
                     in_key = self.controller.add_input_source(block.file_path)
                     self.controller.add_output_block(
                         in_key, out_key,
-                        block.start_point, block.end_point
+                        block.start_point, block.end_point, block.speed
                     )
+
+    def run(self):
+        self.controller.convert()
 
 
 def group_n(iterable, n, m):
@@ -196,6 +198,8 @@ def show_group(input_folder: Path, output_folder: Path):
     with (input_folder / 'output.txt').open() as f:
         for output, levels in group_n(f, 2, 1):
             time_group.add_output(output_folder / output, levels.split(','))
+
+    time_group.run()
 
 
 def main():
