@@ -4,7 +4,7 @@ import sys
 from dataclasses import field, dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from pyffmpeg.controller import MediaController
 
@@ -18,6 +18,14 @@ class Interval:
 
     def __repr__(self):
         return f"{self.start_point}-{self.end_point}(X{self.speed})"
+
+    def set_time(self,
+                 opening: str, time_info: Decimal, file_path: Path):
+        if opening == 'a':
+            self.start_point = time_info
+        else:
+            self.end_point = time_info
+        self.file_path = file_path
 
     def contains(self, speed_change):
         return (
@@ -50,6 +58,7 @@ class Interval:
 
 @dataclass
 class OneLevel:
+    intro_point: Optional[Interval] = None  # 맵을 처음 시작할 때 나오는 정보
     check_point: List[Interval] = field(default_factory=list)
 
     def set_time(self,
@@ -58,12 +67,16 @@ class OneLevel:
         while len(self.check_point) <= check_point:
             self.check_point.append(Interval())
 
-        interval = self.check_point[check_point]
-        if opening == 'a':
-            interval.start_point = time_info
-        else:
-            interval.end_point = time_info
-        interval.file_path = file_path
+        self.check_point[check_point].set_time(
+            opening, time_info, file_path
+        )
+
+    def set_intro_time(self,
+                       opening: str, time_info: Decimal,
+                       file_path: Path):
+        if self.intro_point is None:
+            self.intro_point = Interval()
+        self.intro_point.set_time(opening, time_info, file_path)
 
     def _split_interval(self, speed_change):
         for interval in self.check_point:
@@ -75,6 +88,11 @@ class OneLevel:
     def set_speed(self, speed_change_list: List['SpeedChange']):
         for speed_change in speed_change_list:
             self.check_point = list(self._split_interval(speed_change))
+
+    def get_block_list(self):
+        if self.intro_point is not None:
+            yield self.intro_point
+        yield from self.check_point
 
 
 @dataclass
@@ -91,7 +109,9 @@ class TeamInfo(collections.defaultdict):
 
 class TimeContainer:
     def __init__(self):
-        self.pattern_interval = re.compile(r"([a-zA-Z]+)(\d+)cp(\d)([ab])")
+        self.pattern_interval = re.compile(
+            r"([a-zA-Z]+)(\d+)(?:cp(\d)|int)([ab])"
+        )
         self.pattern_speed = re.compile(r"x(\d)")
         self.map_info = collections.defaultdict(TeamInfo)
         self.controller = MediaController()
@@ -109,13 +129,19 @@ class TimeContainer:
             if g := self.pattern_interval.fullmatch(tick_com):
                 team_name, counter, check_point, opening = g.groups()
                 counter = int(counter)
-                check_point = int(check_point)
+                if check_point is None:
+                    # 인트로 시작부분
+                    self.map_info[team_name][counter].set_intro_time(
+                        opening, time_info, file_path
+                    )
+                else:
+                    check_point = int(check_point)
 
-                self.map_info[team_name][counter].set_time(
-                    check_point,
-                    opening, time_info,
-                    file_path
-                )
+                    self.map_info[team_name][counter].set_time(
+                        check_point,
+                        opening, time_info,
+                        file_path
+                    )
             elif g := self.pattern_speed.fullmatch(tick_com):
                 speed = Decimal(g.group(1))
                 self.speed_info.append(
@@ -145,7 +171,7 @@ class TimeContainer:
                 team, counter = g.groups()
                 counter = int(counter)
                 print(level_code)
-                for block in self.map_info[team][counter].check_point:
+                for block in self.map_info[team][counter].get_block_list():
                     in_key = self.controller.add_input_source(block.file_path)
                     self.controller.add_output_block(
                         in_key, out_key,
