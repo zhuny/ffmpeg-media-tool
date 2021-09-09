@@ -71,6 +71,9 @@ class MediaController:
 
     def convert(self):
         for output in self.output_source.values():
+            if output.is_exists():
+                continue
+
             pipeline = [
                 FilterBuilderVisitor(),
                 CommandBuilderVisitor()
