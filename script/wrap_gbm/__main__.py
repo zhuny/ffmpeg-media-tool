@@ -60,6 +60,7 @@ class Interval:
 class OneLevel:
     intro_point: Optional[Interval] = None  # 맵을 처음 시작할 때 나오는 정보
     check_point: List[Interval] = field(default_factory=list)
+    is_check: bool = False
 
     def set_time(self,
                  check_point: int, opening: str, time_info: Decimal,
@@ -93,6 +94,9 @@ class OneLevel:
         if self.intro_point is not None:
             yield self.intro_point
         yield from self.check_point
+
+    def checked(self):
+        self.is_check = True
 
 
 @dataclass
@@ -154,6 +158,7 @@ class TimeContainer:
             for index, level in sorted(info.items()):
                 print(
                     f"    {name}{index} : {len(level.check_point)}",
+                    f"O" if level.is_check else "X" ,
                     level.check_point
                 )
 
@@ -170,7 +175,7 @@ class TimeContainer:
             if g := pattern.fullmatch(level_code):
                 team, counter = g.groups()
                 counter = int(counter)
-                print(level_code)
+                self.map_info[team][counter].checked()
                 for block in self.map_info[team][counter].get_block_list():
                     in_key = self.controller.add_input_source(block.file_path)
                     self.controller.add_output_block(
