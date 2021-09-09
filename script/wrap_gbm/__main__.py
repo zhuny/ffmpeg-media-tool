@@ -132,6 +132,7 @@ class TimeContainer:
         for tick_com in tick_code.split('|'):
             if g := self.pattern_interval.fullmatch(tick_com):
                 team_name, counter, check_point, opening = g.groups()
+                team_name = team_name.lower()
                 counter = int(counter)
                 if check_point is None:
                     # 인트로 시작부분
@@ -226,9 +227,12 @@ def show_group(input_folder: Path, output_folder: Path):
 
     time_group.adjust_speed()
 
-    with (input_folder / 'output.txt').open() as f:
+    with (input_folder / 'output.txt').open(encoding="utf8") as f:
         for output, levels in group_n(f, 2, 1):
             time_group.add_output(output_folder / output, levels.split(','))
+
+    time_group.show()
+    input()
 
     time_group.run()
 
