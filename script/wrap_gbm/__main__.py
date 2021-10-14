@@ -17,7 +17,10 @@ class Interval:
     speed: Decimal = Decimal(1)
 
     def __repr__(self):
-        return f"{self.start_point}-{self.end_point}(X{self.speed})"
+        return (
+            f"{self.start_point}-{self.end_point}(X{self.speed})"
+            f"[{self.file_path.stem}]"
+        )
 
     def set_time(self,
                  opening: str, time_info: Decimal, file_path: Path):
@@ -159,7 +162,7 @@ class TimeContainer:
             for index, level in sorted(info.items()):
                 print(
                     f"    {name}{index} : {len(level.check_point)}",
-                    f"O" if level.is_check else "X" ,
+                    f"O" if level.is_check else "X",
                     level.check_point
                 )
 
