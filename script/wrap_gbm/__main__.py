@@ -207,22 +207,38 @@ def group_n(iterable, n, m):
             is_skip = not is_skip
 
 
-def show_group(input_folder: Path, output_folder: Path):
+def travel_file_list(folder_list: List[Path]):
+    for folder in folder_list:
+        for s in folder.glob("**/*"):
+            if s.is_file():
+                yield s
+
+
+def find_output_file(folder_list):
+    for s in travel_file_list(folder_list):
+        if s.name == 'output.txt':
+            return s
+
+
+def show_group(input_folder_list: List[Path], output_folder: Path):
     line_match = re.compile(r'\d+=(.+)')
     time_group = TimeContainer()
 
     suffix_map = {
         f.stem: f
-        for f in input_folder.glob('*')
+        for f in travel_file_list(input_folder_list)
         if f.suffix != '.gbm'
     }
 
-    for f in input_folder.glob('*.gbm'):
+    for f in travel_file_list(input_folder_list):
+        if f.suffix != '.gbm':
+            continue
+
         if f.stem not in suffix_map:
             continue
 
         matched_ts = suffix_map[f.stem]
-        for line in f.open():
+        for line in f.open(encoding='utf8'):
             g = line_match.match(line)
             if g is not None:
                 info = g.group(1).split()
@@ -230,7 +246,13 @@ def show_group(input_folder: Path, output_folder: Path):
 
     time_group.adjust_speed()
 
-    with (input_folder / 'output.txt').open(encoding="utf8") as f:
+    output_info = find_output_file(input_folder_list)
+
+    if output_info is None:
+        print("Checkout your output.txt file")
+        return
+
+    with output_info.open(encoding="utf8") as f:
         for output, levels in group_n(f, 2, 1):
             time_group.add_output(output_folder / output, levels.split(','))
 
@@ -241,7 +263,13 @@ def show_group(input_folder: Path, output_folder: Path):
 
 
 def main():
-    show_group(Path(sys.argv[1]), Path(sys.argv[2]))
+    if len(sys.argv) >= 3:
+        show_group(
+            [Path(p) for p in sys.argv[1:-1]],
+            Path(sys.argv[-1])
+        )
+    else:
+        print(sys.argv[0], "{input folder}+", "{output folder}")
 
 
 if __name__ == '__main__':
