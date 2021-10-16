@@ -38,12 +38,16 @@ class RandomKeyDict(dict):
 class MediaController:
     def __init__(self):
         self.input_source = RandomKeyDict()
+        self.input_source_map = {}
         self.output_source = RandomKeyDict()
 
     def add_input_source(self, file_path: Path):
+        if file_path in self.input_source_map:
+            return self.input_source_map[file_path]
+
         input_source = InputSource(file_path=file_path)
         key = self.input_source.add_value(input_source)
-        input_source.key = key
+        self.input_source_map[file_path] = input_source.key = key
         return key
 
     def add_output_source(self, file_path: Path):
@@ -67,6 +71,9 @@ class MediaController:
 
     def convert(self):
         for output in self.output_source.values():
+            if output.is_exists():
+                continue
+
             pipeline = [
                 FilterBuilderVisitor(),
                 CommandBuilderVisitor()
@@ -76,4 +83,4 @@ class MediaController:
                 output = step.end()
                 print(output)
 
-        subprocess.run(output)
+            subprocess.run(output)

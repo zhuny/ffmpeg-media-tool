@@ -23,3 +23,6 @@ class OutputSource:
     file_path: Path
     key: str = ""
     media_block_list: List[MediaBlock] = field(default_factory=list)
+
+    def is_exists(self):
+        return self.file_path.exists()
