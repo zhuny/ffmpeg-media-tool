@@ -56,16 +56,21 @@ class MediaController:
         output_source.key = key
         return key
 
-    def add_output_block(self, input_key, output_key, start, end, speed=None):
+    def add_output_block(self,
+                         input_key, output_key,
+                         start, end,
+                         speed=None, rotate=None):
         input_source = self.input_source[input_key]
         output_source = self.output_source[output_key]
         speed = Decimal(1 if speed is None else speed)
+        rotate = Decimal(0 if rotate is None else rotate)
 
         block = MediaBlock(
             input_source=input_source,
             start_point=Decimal(start),
             end_point=Decimal(end),
-            speed=speed
+            speed=speed,
+            rotate=rotate
         )
         output_source.media_block_list.append(block)
 

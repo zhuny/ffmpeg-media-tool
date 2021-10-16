@@ -16,6 +16,7 @@ class MediaBlock:
     start_point: Decimal
     end_point: Decimal
     speed: Decimal = Decimal(1)
+    rotate: int = Decimal(0)  # it is degree
 
 
 @dataclass

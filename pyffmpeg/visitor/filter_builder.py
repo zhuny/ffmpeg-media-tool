@@ -1,6 +1,6 @@
 from pyffmpeg.model.filter_complex import Media, Filters, SourceOf, \
     InputMedia, KindEnum
-from pyffmpeg.model.media_block import OutputSource, InputSource
+from pyffmpeg.model.media_block import OutputSource, InputSource, MediaBlock
 
 
 class FilterBuilderVisitor:
@@ -35,7 +35,7 @@ class FilterBuilderVisitor:
             output_path=output.file_path
         )
 
-    def visit_media_block(self, block):
+    def visit_media_block(self, block: MediaBlock):
         input_media = self.visit_input_source(block.input_source)
         yield Media(
             source_list=[
@@ -51,6 +51,7 @@ class FilterBuilderVisitor:
         )
 
     def _trim_with_speed(self, block, kind_enum: KindEnum):
+        # 자르는 부분
         yield Filters(
             self._filter_name('trim', kind_enum),
             kwargs={
@@ -62,6 +63,8 @@ class FilterBuilderVisitor:
             self._filter_name("setpts", kind_enum),
             args="PTS-STARTPTS"
         )
+
+        # 스피드 조절하기
         inv = 1 / block.speed
         if block.speed == 1:
             pass
@@ -77,6 +80,10 @@ class FilterBuilderVisitor:
             )
         elif kind_enum == KindEnum.audio:
             yield Filters("atempo", args=f"{block.speed}")
+
+        # 회전
+        # if kind_enum == KindEnum.video and block.rotate != 0:
+        #     yield Filters("rotate", args=f"{block.rotate}*PI/180")
 
     def _filter_name(self, name, kind_enum: KindEnum):
         if kind_enum == KindEnum.video:
