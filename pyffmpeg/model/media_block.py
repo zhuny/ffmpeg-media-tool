@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
 
 @dataclass
@@ -11,12 +11,17 @@ class InputSource:
 
 
 @dataclass
+class Rotate:
+    degree: int  # it is degree
+
+
+@dataclass
 class MediaBlock:
     input_source: InputSource
     start_point: Decimal
     end_point: Decimal
     speed: Decimal = Decimal(1)
-    rotate: int = Decimal(0)  # it is degree
+    filter_list: List[Rotate] = field(default_factory=list)
 
 
 @dataclass

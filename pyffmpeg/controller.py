@@ -2,7 +2,8 @@ import subprocess
 from decimal import Decimal
 from pathlib import Path
 
-from pyffmpeg.model.media_block import InputSource, OutputSource, MediaBlock
+from pyffmpeg.model.media_block import InputSource, OutputSource, MediaBlock, \
+    Rotate
 from pyffmpeg.visitor.command_builder import CommandBuilderVisitor
 from pyffmpeg.visitor.filter_builder import FilterBuilderVisitor
 
@@ -70,7 +71,7 @@ class MediaController:
             start_point=Decimal(start),
             end_point=Decimal(end),
             speed=speed,
-            rotate=rotate
+            filter_list=[Rotate(degree=rotate)]
         )
         output_source.media_block_list.append(block)
 
