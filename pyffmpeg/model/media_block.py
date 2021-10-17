@@ -30,6 +30,12 @@ class MediaBlock:
         Union[RotateFilter, TransposeFilter]
     ] = field(default_factory=list)
 
+    def f_rotate(self, degree):
+        self.filter_list.append(RotateFilter(degree))
+
+    def f_transpose(self, rotate90):
+        self.filter_list.append(TransposeFilter(rotate90=rotate90))
+
 
 @dataclass
 class OutputSource:

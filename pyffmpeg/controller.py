@@ -74,9 +74,6 @@ class MediaController:
         output_source.media_block_list.append(block)
         return block
 
-    def transpose(self, block: MediaBlock, rotate90: int):
-        block.filter_list.append(TransposeFilter(rotate90=rotate90))
-
     def convert(self, run=True):
         for output in self.output_source.values():
             if output.is_exists():
