@@ -3,7 +3,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from pyffmpeg.model.media_block import InputSource, OutputSource, MediaBlock, \
-    Rotate
+    Transpose
 from pyffmpeg.visitor.command_builder import CommandBuilderVisitor
 from pyffmpeg.visitor.filter_builder import FilterBuilderVisitor
 
@@ -60,22 +60,24 @@ class MediaController:
     def add_output_block(self,
                          input_key, output_key,
                          start, end,
-                         speed=None, rotate=None):
+                         speed=None) -> MediaBlock:
         input_source = self.input_source[input_key]
         output_source = self.output_source[output_key]
         speed = Decimal(1 if speed is None else speed)
-        rotate = Decimal(0 if rotate is None else rotate)
 
         block = MediaBlock(
             input_source=input_source,
             start_point=Decimal(start),
             end_point=Decimal(end),
             speed=speed,
-            filter_list=[Rotate(degree=rotate)]
         )
         output_source.media_block_list.append(block)
+        return block
 
-    def convert(self):
+    def transpose(self, block: MediaBlock, rotate90: int):
+        block.filter_list.append(Transpose(rotate90=rotate90))
+
+    def convert(self, run=True):
         for output in self.output_source.values():
             if output.is_exists():
                 continue
@@ -89,4 +91,5 @@ class MediaController:
                 output = step.end()
                 print(output)
 
-            subprocess.run(output)
+            if run:
+                subprocess.run(output)

@@ -50,7 +50,7 @@ class FilterBuilderVisitor:
             filters=list(self._trim_with_speed(block, KindEnum.audio))
         )
 
-    def _trim_with_speed(self, block, kind_enum: KindEnum):
+    def _trim_with_speed(self, block: MediaBlock, kind_enum: KindEnum):
         # 자르는 부분
         yield Filters(
             self._filter_name('trim', kind_enum),
@@ -82,8 +82,14 @@ class FilterBuilderVisitor:
             yield Filters("atempo", args=f"{block.speed}")
 
         # 회전
-        # if kind_enum == KindEnum.video and block.rotate != 0:
-        #     yield Filters("rotate", args=f"{block.rotate}*PI/180")
+        if kind_enum == KindEnum.video:
+            for fi in block.filter_list:
+                if isinstance(fi, Rotate):
+                    yield Filters("rotate", args=f"{fi.degree}*PI/180")
+                elif isinstance(fi, Transpose):
+                    yield Filters("transpose", kwargs={'dir': f"{fi.rotate90}"})
+                else:
+                    print("Unknown Filter :", fi)
 
     def _filter_name(self, name, kind_enum: KindEnum):
         if kind_enum == KindEnum.video:

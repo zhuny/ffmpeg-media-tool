@@ -16,12 +16,17 @@ class Rotate:
 
 
 @dataclass
+class Transpose:
+    rotate90: int
+
+
+@dataclass
 class MediaBlock:
     input_source: InputSource
     start_point: Decimal
     end_point: Decimal
     speed: Decimal = Decimal(1)
-    filter_list: List[Rotate] = field(default_factory=list)
+    filter_list: List[Union[Rotate, Transpose]] = field(default_factory=list)
 
 
 @dataclass
