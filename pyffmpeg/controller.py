@@ -3,7 +3,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from pyffmpeg.model.media_block import InputSource, OutputSource, MediaBlock, \
-    Transpose
+    TransposeFilter
 from pyffmpeg.visitor.command_builder import CommandBuilderVisitor
 from pyffmpeg.visitor.filter_builder import FilterBuilderVisitor
 
@@ -75,7 +75,7 @@ class MediaController:
         return block
 
     def transpose(self, block: MediaBlock, rotate90: int):
-        block.filter_list.append(Transpose(rotate90=rotate90))
+        block.filter_list.append(TransposeFilter(rotate90=rotate90))
 
     def convert(self, run=True):
         for output in self.output_source.values():

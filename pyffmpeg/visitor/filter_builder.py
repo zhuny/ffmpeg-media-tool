@@ -1,6 +1,7 @@
 from pyffmpeg.model.filter_complex import Media, Filters, SourceOf, \
     InputMedia, KindEnum
-from pyffmpeg.model.media_block import OutputSource, InputSource, MediaBlock
+from pyffmpeg.model.media_block import OutputSource, InputSource, MediaBlock, \
+    RotateFilter, TransposeFilter
 
 
 class FilterBuilderVisitor:
@@ -84,9 +85,9 @@ class FilterBuilderVisitor:
         # 회전
         if kind_enum == KindEnum.video:
             for fi in block.filter_list:
-                if isinstance(fi, Rotate):
+                if isinstance(fi, RotateFilter):
                     yield Filters("rotate", args=f"{fi.degree}*PI/180")
-                elif isinstance(fi, Transpose):
+                elif isinstance(fi, TransposeFilter):
                     yield Filters("transpose", kwargs={'dir': f"{fi.rotate90}"})
                 else:
                     print("Unknown Filter :", fi)
