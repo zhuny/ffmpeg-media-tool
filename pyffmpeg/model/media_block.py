@@ -21,13 +21,21 @@ class TransposeFilter:
 
 
 @dataclass
+class CropFilter:
+    x: int
+    y: int
+    width: int
+    height: int
+
+
+@dataclass
 class MediaBlock:
     input_source: InputSource
     start_point: Decimal
     end_point: Decimal
     speed: Decimal = Decimal(1)
     filter_list: List[
-        Union[RotateFilter, TransposeFilter]
+        Union[RotateFilter, TransposeFilter, CropFilter]
     ] = field(default_factory=list)
 
     def f_rotate(self, degree):
@@ -35,6 +43,9 @@ class MediaBlock:
 
     def f_transpose(self, rotate90):
         self.filter_list.append(TransposeFilter(rotate90=rotate90))
+
+    def f_crop(self, x, y, width, height):
+        self.filter_list.append(CropFilter(x, y, width, height))
 
 
 @dataclass

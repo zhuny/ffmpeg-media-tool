@@ -1,7 +1,7 @@
 from pyffmpeg.model.filter_complex import Media, Filters, SourceOf, \
     InputMedia, KindEnum
 from pyffmpeg.model.media_block import OutputSource, InputSource, MediaBlock, \
-    RotateFilter, TransposeFilter
+    RotateFilter, TransposeFilter, CropFilter
 
 
 class FilterBuilderVisitor:
@@ -89,6 +89,11 @@ class FilterBuilderVisitor:
                     yield Filters("rotate", args=f"{fi.degree}*PI/180")
                 elif isinstance(fi, TransposeFilter):
                     yield Filters("transpose", kwargs={'dir': f"{fi.rotate90}"})
+                elif isinstance(fi, CropFilter):
+                    yield Filters("crop", kwargs={
+                        'w': f'{fi.width}', 'h': f'{fi.height}',
+                        'x': f'{fi.x}', 'y': f'{fi.y}'
+                    })
                 else:
                     print("Unknown Filter :", fi)
 
