@@ -2,8 +2,7 @@ import subprocess
 from decimal import Decimal
 from pathlib import Path
 
-from pyffmpeg.model.media_block import InputSource, OutputSource, MediaBlock, \
-    TransposeFilter
+from pyffmpeg.model.media_block import InputSource, OutputSource, MediaBlock
 from pyffmpeg.visitor.command_builder import CommandBuilderVisitor
 from pyffmpeg.visitor.filter_builder import FilterBuilderVisitor
 
