@@ -1,6 +1,7 @@
 from pyffmpeg.model.filter_complex import Media, Filters, SourceOf, \
     InputMedia, KindEnum
-from pyffmpeg.model.media_block import OutputSource, InputSource
+from pyffmpeg.model.media_block import OutputSource, InputSource, MediaBlock, \
+    RotateFilter, TransposeFilter, CropFilter
 
 
 class FilterBuilderVisitor:
@@ -35,7 +36,7 @@ class FilterBuilderVisitor:
             output_path=output.file_path
         )
 
-    def visit_media_block(self, block):
+    def visit_media_block(self, block: MediaBlock):
         input_media = self.visit_input_source(block.input_source)
         yield Media(
             source_list=[
@@ -50,7 +51,8 @@ class FilterBuilderVisitor:
             filters=list(self._trim_with_speed(block, KindEnum.audio))
         )
 
-    def _trim_with_speed(self, block, kind_enum: KindEnum):
+    def _trim_with_speed(self, block: MediaBlock, kind_enum: KindEnum):
+        # 자르는 부분
         yield Filters(
             self._filter_name('trim', kind_enum),
             kwargs={
@@ -62,6 +64,8 @@ class FilterBuilderVisitor:
             self._filter_name("setpts", kind_enum),
             args="PTS-STARTPTS"
         )
+
+        # 스피드 조절하기
         inv = 1 / block.speed
         if block.speed == 1:
             pass
@@ -77,6 +81,21 @@ class FilterBuilderVisitor:
             )
         elif kind_enum == KindEnum.audio:
             yield Filters("atempo", args=f"{block.speed}")
+
+        # 회전
+        if kind_enum == KindEnum.video:
+            for fi in block.filter_list:
+                if isinstance(fi, RotateFilter):
+                    yield Filters("rotate", args=f"{fi.degree}*PI/180")
+                elif isinstance(fi, TransposeFilter):
+                    yield Filters("transpose", kwargs={'dir': f"{fi.rotate90}"})
+                elif isinstance(fi, CropFilter):
+                    yield Filters("crop", kwargs={
+                        'w': f'{fi.width}', 'h': f'{fi.height}',
+                        'x': f'{fi.x}', 'y': f'{fi.y}'
+                    })
+                else:
+                    print("Unknown Filter :", fi)
 
     def _filter_name(self, name, kind_enum: KindEnum):
         if kind_enum == KindEnum.video:

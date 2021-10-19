@@ -56,7 +56,10 @@ class MediaController:
         output_source.key = key
         return key
 
-    def add_output_block(self, input_key, output_key, start, end, speed=None):
+    def add_output_block(self,
+                         input_key, output_key,
+                         start, end,
+                         speed=None) -> MediaBlock:
         input_source = self.input_source[input_key]
         output_source = self.output_source[output_key]
         speed = Decimal(1 if speed is None else speed)
@@ -65,11 +68,12 @@ class MediaController:
             input_source=input_source,
             start_point=Decimal(start),
             end_point=Decimal(end),
-            speed=speed
+            speed=speed,
         )
         output_source.media_block_list.append(block)
+        return block
 
-    def convert(self):
+    def convert(self, run=True):
         for output in self.output_source.values():
             if output.is_exists():
                 continue
@@ -83,4 +87,5 @@ class MediaController:
                 output = step.end()
                 print(output)
 
-            subprocess.run(output)
+            if run:
+                subprocess.run(output)
